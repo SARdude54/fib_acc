@@ -5,6 +5,7 @@ module FSM (
     input logic rst_n,
     input logic vld_in,
     input logic rdy_out,
+    input logic done_cnt,
     output logic cnt_en,
     output logic vld_out,
     output logic rdy_in
@@ -45,11 +46,11 @@ always_comb begin
         end
 
         ST_COUNT : begin
-            if (!rdy_out) begin
+            if (!done_cnt) begin
                 cnt_en = 1;
                 vld_out = 0;
                 NS = ST_COUNT;
-            end else begin
+            end else if (done_cnt) begin
                 NS = ST_READ;
             end
         end
@@ -57,7 +58,9 @@ always_comb begin
         ST_READ : begin
             vld_out = 1;
             cnt_en = 0;
-            rdy_in = 1;
+            if (rdy_out) begin
+                rdy_in = 1;
+            end
             NS = ST_INIT;
         end
         default: NS = ST_INIT;
