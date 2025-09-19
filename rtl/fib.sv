@@ -25,25 +25,42 @@ FSM FSM(.CLK(CLK),
         .rdy_out(rdy_out));
 
 // to keep track of fib_in
-always_ff @( CLK ) begin : counter
+always_ff @( posedge CLK ) begin : counter
     if (!rst_n) begin
-        cnt = 0;
-    end if (cnt_en && !rst_n) begin
-        cnt = cnt + 1;
+        cnt <= 0;
+    end else if (cnt_en && rst_n) begin
+        cnt <= cnt + 1;
     end
 end
 
-assign done_cnt = fib_in == cnt;
+assign done_cnt = (fib_in == cnt) && (fib_in != 8'b0);
 
-reg [7:0] out;
-always @(CLK) begin : register
+reg [7:0] A;
+always_ff @(posedge CLK) begin
+
     if (!rst_n) begin
-        out <= 8'b0;
+        A <= 8'b0;
+    end else if (cnt == 8'b00000001) begin
+        A <= 8'b0;
     end else begin
-        out <= cnt;
+        A <= B;
     end
 end
 
-assign fib_out = {24'b0, out} + {24'b0, cnt};
+reg [7:0] B;
+always_ff @( posedge CLK ) begin
+    if (!rst_n) begin
+        B <= 8'b0;
+    end else if (cnt == 8'b0000001) begin
+        B <= 8'b00000001;
+    end else begin
+        B <= C;
+    end
+end
+
+wire [7:0] C;
+assign C = A + B;
+
+assign fib_out = {24'b0, C};
     
 endmodule
